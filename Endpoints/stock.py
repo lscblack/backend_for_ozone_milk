@@ -10,7 +10,7 @@ router = APIRouter(prefix="/products", tags=["Product Management"])
 
 # Create a new product
 @router.post("/", response_model=ProductResponseSchema, status_code=201)
-async def create_product(product: ProductCreateSchema, db:db_dependency,user:user_dependency):
+async def create_product(product: ProductCreateSchema, db:db_dependency, user:user_dependency):
     if isinstance(user, HTTPException):
         raise user
     """
@@ -33,14 +33,14 @@ async def create_product(product: ProductCreateSchema, db:db_dependency,user:use
 
 # Get a single product by its ID
 @router.get("/{product_id}", response_model=ProductResponseSchema, status_code=200)
-async def get_product(product_id: int, db:db_dependency,user:user_dependency):
+async def get_product(product_id: int, db:db_dependency, user:user_dependency):
     if isinstance(user, HTTPException):
         raise user
     """
     Endpoint to retrieve a single product by its ID.
     - **product_id**: ID of the product to retrieve.
     """
-    product = db.query(Products).filter(Products.pro_id == product_id).first()
+    product = db.query(Products).filter(Products.Pro_id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found.")
     
@@ -48,7 +48,7 @@ async def get_product(product_id: int, db:db_dependency,user:user_dependency):
 
 # Get all products
 @router.get("/", response_model=list[ProductResponseSchema], status_code=200)
-async def get_all_products(db:db_dependency,user:user_dependency):
+async def get_all_products(db:db_dependency, user:user_dependency):
     if isinstance(user, HTTPException):
         raise user
     """
@@ -59,7 +59,7 @@ async def get_all_products(db:db_dependency,user:user_dependency):
 
 # Update an existing product by its ID
 @router.patch("/{product_id}", response_model=ProductResponseSchema, status_code=200)
-async def update_product(product_id: int, product_update: ProductUpdateSchema, db:db_dependency,user:user_dependency):
+async def update_product(product_id: int, product_update: ProductUpdateSchema, db:db_dependency, user:user_dependency):
     if isinstance(user, HTTPException):
         raise user
     """
@@ -69,7 +69,7 @@ async def update_product(product_id: int, product_update: ProductUpdateSchema, d
     - **product_price**: (optional) Updated price of the product.
     - **date**: (optional) Updated date the product was added.
     """
-    product = db.query(Products).filter(Products.pro_id == product_id).first()
+    product = db.query(Products).filter(Products.Pro_id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found.")
     
@@ -88,14 +88,14 @@ async def update_product(product_id: int, product_update: ProductUpdateSchema, d
 
 # Delete a product by its ID
 @router.delete("/{product_id}", status_code=204)
-async def delete_product(product_id: int, db:db_dependency,user:user_dependency):
+async def delete_product(product_id: int, db:db_dependency, user:user_dependency):
     if isinstance(user, HTTPException):
         raise user
     """
     Endpoint to delete a product by its ID.
     - **product_id**: ID of the product to delete.
     """
-    product = db.query(Products).filter(Products.pro_id == product_id).first()
+    product = db.query(Products).filter(Products.Pro_id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found.")
     
