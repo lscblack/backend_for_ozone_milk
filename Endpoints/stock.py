@@ -66,6 +66,7 @@ async def update_product(product_id: int, product_update: ProductUpdateSchema, d
     Endpoint to update an existing product by its ID.
     - **product_id**: ID of the product to update.
     - **product_name**: (optional) Updated name of the product.
+    - **product_type**: (optional) Updated name of the product.
     - **product_price**: (optional) Updated price of the product.
     - **date**: (optional) Updated date the product was added.
     """
@@ -76,6 +77,8 @@ async def update_product(product_id: int, product_update: ProductUpdateSchema, d
     # Update fields
     if product_update.product_name:
         product.product_name = product_update.product_name
+    if product_update.product_type:
+        product.product_type = product_update.product_type
     if product_update.product_price:
         product.product_price = product_update.product_price
     if product_update.date:

@@ -14,5 +14,6 @@ class Products(Base):
     __tablename__ = "products"
     Pro_id = Column(Integer, primary_key=True, index=True)
     product_name = Column(String(255), unique=True, nullable=False, default="")  # Non-nullable for uniqueness
+    product_type = Column(String(255), unique=True, nullable=False, default="")  # Non-nullable for uniqueness
     product_price = Column(String(255),  nullable=True, default="")  # Non-nullable for uniqueness
     date = Column(String(255),  nullable=True, default="")  # Non-nullable for uniqueness
