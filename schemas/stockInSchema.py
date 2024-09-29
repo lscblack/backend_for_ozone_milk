@@ -3,19 +3,19 @@ from typing import Optional
 
 class StockCreateSchema(BaseModel):
     product_id: int
-    product_quantity: conint(ge=0)
-    price_per_unit: condecimal(decimal_places=2, max_digits=10)
-    total_price: Optional[condecimal(decimal_places=2, max_digits=10)]
-    date: Optional[str] = Field(None, description="Date when the stock was added")
+    product_quantity: Optional[int]
+    price_per_unit: float
+    total_price: Optional[float]
+    date: Optional[str] = None
 
     class Config:
         orm_mode = True
 
 class StockUpdateSchema(BaseModel):
-    product_quantity: Optional[conint(ge=0)]
-    price_per_unit: Optional[condecimal(decimal_places=2, max_digits=10)]
-    total_price: Optional[condecimal(decimal_places=2, max_digits=10)]
-    date: Optional[str]
+    product_quantity: Optional[conint(ge=0)] = None
+    price_per_unit: Optional[float] = None
+    total_price: Optional[float] = None
+    date: Optional[str] = None
 
     class Config:
         orm_mode = True

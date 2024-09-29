@@ -2,12 +2,12 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from db.VerifyToken import user_dependency
 from db.connection import db_dependency
-from models.userModels import Stock, Products
+from models.userModels import Stock, Products, StockHistory
 from schemas.stockInSchema import StockCreateSchema, StockUpdateSchema, StockResponseSchema
 
 router = APIRouter(prefix="/stock/in", tags=["Stock In Management"])
 
-@router.post("/", response_model=StockResponseSchema, status_code=201)
+@router.post("/", status_code=201)
 async def create_stock(stock: StockCreateSchema, db: db_dependency, user: user_dependency):
     if isinstance(user, HTTPException):
         raise user
@@ -35,16 +35,35 @@ async def create_stock(stock: StockCreateSchema, db: db_dependency, user: user_d
 
     # Create new stock since it doesn't exist
     new_stock = Stock(**stock.dict())
-
     # Automatically calculate total price if not provided
     if not stock.total_price:
         new_stock.total_price = str(float(stock.product_quantity) * float(stock.price_per_unit))
+    history = StockHistory(
+        product_id=stock.product_id,
+        product_quantity=stock.product_quantity,
+        price_per_unit=stock.price_per_unit,
+        total_price=new_stock.total_price,
+        stocktype="stock in",
+    )
+    
 
+
+    # Add new stock and its history to the database
     db.add(new_stock)
+    db.add(history)
     db.commit()
     db.refresh(new_stock)
 
-    return new_stock
+    return {
+        "product_id": stock.product_id,
+        "product_name": product.product_name,
+        "product_type": product.product_type,
+        "product_quantity": new_stock.product_quantity,
+        "price_per_unit": new_stock.price_per_unit,
+        "total_price": new_stock.total_price,
+        "date": new_stock.date
+    }
+
 
 # Get a single stock entry by its ID (including product name and product type)
 @router.get("/{stock_id}", response_model=StockResponseSchema, status_code=200)
