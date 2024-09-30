@@ -7,7 +7,7 @@ class StockCreateSchema(BaseModel):
     product_quantity: Optional[int]
     price_per_unit: float
     total_price: Optional[float]
-    date: Optional[date] = None
+    date: Optional[date]
 
     class Config:
         orm_mode = True
@@ -16,7 +16,7 @@ class StockUpdateSchema(BaseModel):
     product_quantity: Optional[conint(ge=0)] = None
     price_per_unit: Optional[float] = None
     total_price: Optional[float] = None
-    date: Optional[date] = None
+    date: Optional[date]
 
     class Config:
         orm_mode = True
