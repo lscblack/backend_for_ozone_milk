@@ -6,14 +6,13 @@ from models.userModels import Stock, Products, StockHistory
 from schemas.stockInSchema import StockCreateSchema, StockUpdateSchema, StockResponseSchema
 
 router = APIRouter(prefix="/stock/in", tags=["Stock In Management"])
-
 @router.post("/", status_code=201)
-async def create_stock(stock: StockCreateSchema, db: db_dependency, user: user_dependency):
+async def create_or_update_stock(stock: StockCreateSchema, db: db_dependency, user: user_dependency):
     if isinstance(user, HTTPException):
         raise user
 
     """
-    Endpoint to create a new stock entry.
+    Endpoint to create or update a stock entry.
     - **product_id**: ID of the product (required).
     - **product_quantity**: Quantity of the product (required).
     - **price_per_unit**: Price per unit (required).
@@ -30,39 +29,67 @@ async def create_stock(stock: StockCreateSchema, db: db_dependency, user: user_d
     existing_stock = db.query(Stock).filter(Stock.product_id == stock.product_id).first()
 
     if existing_stock:
-        # If stock exists, return an error
-        raise HTTPException(status_code=400, detail="Stock entry for this product already exists.")
+        # If stock exists, update its quantity, prices, and date
+        existing_stock.product_quantity += stock.product_quantity
+        existing_stock.price_per_unit = stock.price_per_unit
+        existing_stock.total_price = str(float(existing_stock.product_quantity) * float(stock.price_per_unit))
+        existing_stock.date = stock.date
+        db.commit()
+        db.refresh(existing_stock)
 
-    # Create new stock since it doesn't exist
-    new_stock = Stock(**stock.dict())
-    # Automatically calculate total price if not provided
-    if not stock.total_price:
-        new_stock.total_price = str(float(stock.product_quantity) * float(stock.price_per_unit))
-    history = StockHistory(
-        product_id=stock.product_id,
-        product_quantity=stock.product_quantity,
-        price_per_unit=stock.price_per_unit,
-        total_price=new_stock.total_price,
-        stocktype="stock in",
-    )
-    
+        # Add to stock history as an update
+        history = StockHistory(
+            product_id=stock.product_id,
+            product_quantity=stock.product_quantity,
+            price_per_unit=stock.price_per_unit,
+            total_price=existing_stock.total_price,
+            stocktype="stock update",
+        )
+        db.add(history)
+        db.commit()
 
+        return {
+            "message": "Stock updated successfully",
+            "product_id": existing_stock.product_id,
+            "product_name": product.product_name,
+            "product_type": product.product_type,
+            "product_quantity": existing_stock.product_quantity,
+            "price_per_unit": existing_stock.price_per_unit,
+            "total_price": existing_stock.total_price,
+            "date": existing_stock.date
+        }
+    else:
+        # Create new stock since it doesn't exist
+        new_stock = Stock(**stock.dict())
+        # Automatically calculate total price if not provided
+        if not stock.total_price:
+            new_stock.total_price = str(float(stock.product_quantity) * float(stock.price_per_unit))
 
-    # Add new stock and its history to the database
-    db.add(new_stock)
-    db.add(history)
-    db.commit()
-    db.refresh(new_stock)
+        # Add to stock history as a new stock entry
+        history = StockHistory(
+            product_id=stock.product_id,
+            product_quantity=stock.product_quantity,
+            price_per_unit=stock.price_per_unit,
+            total_price=new_stock.total_price,
+            stocktype="stock in",
+        )
 
-    return {
-        "product_id": stock.product_id,
-        "product_name": product.product_name,
-        "product_type": product.product_type,
-        "product_quantity": new_stock.product_quantity,
-        "price_per_unit": new_stock.price_per_unit,
-        "total_price": new_stock.total_price,
-        "date": new_stock.date
-    }
+        # Add new stock and its history to the database
+        db.add(new_stock)
+        db.add(history)
+        db.commit()
+        db.refresh(new_stock)
+
+        return {
+            "message": "Stock created successfully",
+            "product_id": new_stock.product_id,
+            "product_name": product.product_name,
+            "product_type": product.product_type,
+            "product_quantity": new_stock.product_quantity,
+            "price_per_unit": new_stock.price_per_unit,
+            "total_price": new_stock.total_price,
+            "date": new_stock.date
+        }
 
 
 # Get a single stock entry by its ID (including product name and product type)

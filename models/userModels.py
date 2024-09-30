@@ -3,7 +3,6 @@ from db.database import Base
 from datetime import date
 from datetime import datetime
 
-
 class Users(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -23,25 +22,25 @@ class Stock(Base):
     stock_id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.Pro_id"), index=True)  # Corrected foreign key reference
     product_quantity = Column(Integer, nullable=False)  # Quantity should be an integer, not a string
-    price_per_unit = Column(String(255), nullable=False)  # Removed uniqueness
+    price_per_unit = Column(String(255), nullable=False)  
     total_price = Column(String(255), nullable=True)  # Changed field name to lowercase
-    date = Column(String(255), nullable=True)
+    date = Column(Date, nullable=True)
     
 class StockHistory(Base):
     __tablename__ = "StockHistory"
     stock_id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.Pro_id"), index=True)  # Corrected foreign key reference
     product_quantity = Column(Integer, nullable=False)  # Quantity should be an integer, not a string
-    price_per_unit = Column(String(255), nullable=False)  # Removed uniqueness
+    price_per_unit = Column(String(255), nullable=False)  
     total_price = Column(String(255), nullable=True)  # Changed field name to lowercase
-    stocktype = Column(String(255), nullable=True)  # Removed uniqueness 
-    date = Column(String(255), nullable=True)
+    stocktype = Column(String(255), nullable=True)   
+    date = Column(DateTime, default=datetime.utcnow, index=True)
     
 class StockOut(Base):
     __tablename__ = "stockOut"
     stock_id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.Pro_id"), index=True)  # Corrected foreign key reference
     product_quantity = Column(Integer, nullable=False)  # Quantity should be an integer, not a string
-    price_per_unit = Column(String(255), nullable=False)  # Removed uniqueness
+    price_per_unit = Column(String(255), nullable=False)  
     total_price = Column(String(255), nullable=True)  # Changed field name to lowercase
-    date = Column(String(255), nullable=True)
+    date = Column(Date, nullable=True)

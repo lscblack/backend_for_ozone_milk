@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from db.VerifyToken import user_dependency
+from typing import Optional
+from datetime import datetime
 from db.connection import db_dependency
 from models.userModels import StockOut, Products,Stock,StockHistory
 from schemas.stockInSchema import StockCreateSchema, StockUpdateSchema, StockResponseSchema
@@ -222,7 +224,7 @@ async def delete_stock_out(stock_id: int, db: db_dependency, user: user_dependen
 
     """
     Endpoint to delete a stock entry by its ID.
-    - **stock_id**: ID of the stock entry to delete.
+    - **stock_id**: ID of the stock entry to delete. 
     """
     stock = db.query(StockOut).filter(StockOut.stock_id == stock_id).first()
     if not stock:
@@ -231,3 +233,86 @@ async def delete_stock_out(stock_id: int, db: db_dependency, user: user_dependen
     db.delete(stock)
     db.commit()
     return None
+
+
+@router.post("/byDate", status_code=200)
+async def get_all_stocks_out_by_date(
+    db: db_dependency, 
+    user: user_dependency, 
+    startDate: Optional[str] = None, 
+    endDate: Optional[str] = None
+):
+    if isinstance(user, HTTPException):
+        raise user
+
+    """
+    Endpoint to retrieve all stock out entries by date, including product name, product type, 
+    remaining quantity, profit status, and stock transaction type.
+    If no dates are provided, fetch today's stock out entries.
+    """
+
+    # If no startDate and endDate provided, default to today's date
+    if not startDate:
+        startDate = datetime.today().strftime('%Y-%m-%d')
+    if not endDate:
+        endDate = datetime.today().strftime('%Y-%m-%d')
+        
+    # return startDate +" "+endDate
+
+    # Get all stock out entries between the provided dates or for today
+    stock_outs = db.query(StockOut).filter(StockOut.date.between(startDate, endDate)).all()
+
+    if not stock_outs:
+        raise HTTPException(status_code=404, detail="No stock out entries found for the provided date range.")
+
+    result = []
+
+    # Iterate over each stock out entry and retrieve the related product and stock in details
+    for stock_out in stock_outs:
+        # Fetch the product details using the product_id from Products table
+        product = db.query(Products).filter(Products.Pro_id == stock_out.product_id).first()
+        if not product:
+            raise HTTPException(status_code=404, detail=f"Product with ID {stock_out.product_id} does not exist.")
+
+        # Fetch the stock in details for the product to calculate the profit
+        stock_in = db.query(StockHistory).filter(StockHistory.product_id == stock_out.product_id).first()
+        remaing_quantity = db.query(Stock).filter(Stock.product_id == stock_out.product_id).first()
+
+        if not stock_in:
+            raise HTTPException(status_code=404, detail=f"No stock entry found in StockHistory for product ID {stock_out.product_id}.")
+
+        if not remaing_quantity:
+            raise HTTPException(status_code=404, detail=f"No remaining stock found for product ID {stock_out.product_id}.")
+
+        # Calculate profit or loss
+        purchase_price = float(stock_in.price_per_unit)  # Purchase price per unit from StockIn
+        sales_price = float(stock_out.price_per_unit)  # Sales price per unit from StockOut
+        quantity_sold = stock_out.product_quantity
+
+        # Profit calculation: (Sales price × quantity) - (Purchase price × quantity)
+        profit = (sales_price * quantity_sold) - (purchase_price * quantity_sold)
+
+        # Determine profit status
+        if profit > 0:
+            profit_status = "profit"
+        elif profit < 0:
+            profit_status = "loss"
+        else:
+            profit_status = "break-even"
+
+        # Append the formatted response with profit status
+        result.append({
+            "stock_id": stock_out.stock_id,
+            "product_id": stock_out.product_id,
+            "product_quantity": stock_out.product_quantity,
+            "remaing_quantity": remaing_quantity.product_quantity,
+            "price_per_unit": stock_out.price_per_unit,
+            "total_price": stock_out.total_price,
+            "date": stock_out.date,
+            "product_name": product.product_name,
+            "product_type": product.product_type,
+            "profit_status": profit_status,
+            "tra_type": stock_in.stocktype
+        })
+
+    return result

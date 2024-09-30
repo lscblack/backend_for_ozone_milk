@@ -34,6 +34,10 @@ oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register_user(db:db_dependency, create_user_request: CreateUserRequest):
     try:
+        checkUser = db.query(Users).filter(Users.username == create_user_request.username).first()
+        if checkUser:
+            return HTTPException(status_code=400, detail="Username Is Taken")
+
         # Create the user model
         create_user_model = Users(
             username=create_user_request.username,
