@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from db.VerifyToken import user_dependency
 from typing import Optional
-from datetime import datetime
+from datetime import datetime,timedelta
 from db.connection import db_dependency
 from models.userModels import StockOut, Products,Stock,StockHistory
 from schemas.stockInSchema import StockCreateSchema, StockUpdateSchema, StockResponseSchema
@@ -234,7 +234,6 @@ async def delete_stock_out(stock_id: int, db: db_dependency, user: user_dependen
     db.commit()
     return None
 
-
 @router.post("/byDate", status_code=200)
 async def get_all_stocks_out_by_date(
     db: db_dependency, 
@@ -256,11 +255,15 @@ async def get_all_stocks_out_by_date(
         startDate = datetime.today().strftime('%Y-%m-%d')
     if not endDate:
         endDate = datetime.today().strftime('%Y-%m-%d')
-        
-    # return startDate +" "+endDate
+
+    # Convert dates to full timestamp range
+    start_datetime = datetime.strptime(startDate, '%Y-%m-%d')  # 00:00:00
+    end_datetime = datetime.strptime(endDate, '%Y-%m-%d') + timedelta(days=1) - timedelta(seconds=1)  # 23:59:59
 
     # Get all stock out entries between the provided dates or for today
-    stock_outs = db.query(StockOut).filter(StockOut.date.between(startDate, endDate)).all()
+    stock_outs = db.query(StockHistory).filter(
+        StockHistory.date.between(start_datetime, end_datetime)
+    ).all()
 
     if not stock_outs:
         raise HTTPException(status_code=404, detail="No stock out entries found for the provided date range.")
@@ -268,7 +271,7 @@ async def get_all_stocks_out_by_date(
     result = []
 
     # Iterate over each stock out entry and retrieve the related product and stock in details
-    for stock_out in stock_outs:
+    for index, stock_out in enumerate(stock_outs):
         # Fetch the product details using the product_id from Products table
         product = db.query(Products).filter(Products.Pro_id == stock_out.product_id).first()
         if not product:
@@ -312,7 +315,7 @@ async def get_all_stocks_out_by_date(
             "product_name": product.product_name,
             "product_type": product.product_type,
             "profit_status": profit_status,
-            "tra_type": stock_in.stocktype
+            "tra_type": stock_outs[index].stocktype
         })
 
     return result
