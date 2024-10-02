@@ -18,3 +18,16 @@ class Token(BaseModel):  # token validation schema
 class FromData(BaseModel):  # token validation schema
     username: str
     password: str
+
+
+class BalanceCreateSchema(BaseModel):
+    balance_type: str  # Should be "opening" or "closing"
+    date: Optional[date]
+    cash_balance: float
+    momo_balance: float
+
+    class Config:
+        orm_mode = True
+
+class BalanceResponseSchema(BalanceCreateSchema):
+    id: int

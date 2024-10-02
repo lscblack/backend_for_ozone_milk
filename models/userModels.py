@@ -44,3 +44,12 @@ class StockOut(Base):
     price_per_unit = Column(String(255), nullable=False)  
     total_price = Column(String(255), nullable=True)  # Changed field name to lowercase
     date = Column(Date, nullable=True)
+    
+    
+class Balance(Base):
+    __tablename__ = "balances"
+    id = Column(Integer, primary_key=True, index=True)
+    balance_type = Column(String, nullable=False)  # "opening" or "closing"
+    date = Column(Date, nullable=True)
+    cash_balance = Column(Float, nullable=False)
+    momo_balance = Column(Float, nullable=False)

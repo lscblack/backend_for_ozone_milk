@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from sqlalchemy.orm import Session
 from db.VerifyToken import user_dependency
 from typing import Optional

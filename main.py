@@ -2,7 +2,7 @@ from enum import Enum
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
-from Endpoints import auth,stock,stockIn,stockOut
+from Endpoints import auth,stock,stockIn,stockOut,Balance
 
 app = FastAPI(
     title="Ozone Milk Api Documentation",  # Replace with your desired title
@@ -20,6 +20,7 @@ app.add_middleware(
 
 # Include the routers from auth, apis, and otp
 app.include_router(auth.router)
+app.include_router(Balance.router)
 app.include_router(stock.router)
 app.include_router(stockIn.router)
 app.include_router(stockOut.router)
