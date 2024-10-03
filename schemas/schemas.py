@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, validator
+from pydantic import BaseModel, EmailStr, validator,Field
 from typing import List, Optional, Literal
 from datetime import date, datetime
 from schemas.returnSchemas import ReturnUser
@@ -31,3 +31,25 @@ class BalanceCreateSchema(BaseModel):
 
 class BalanceResponseSchema(BalanceCreateSchema):
     id: int
+
+
+class TransactionBase(BaseModel):
+    description: str
+    amount: float = Field(..., gt=0)
+    type: str
+    date: date
+
+class TransactionCreate(TransactionBase):
+    pass
+
+class TransactionUpdate(BaseModel):
+    description: Optional[str] = None
+    amount: Optional[float] = Field(None, gt=0)
+    type: Optional[str] = None
+    date: Optional[date] = None
+
+class TransactionResponse(TransactionBase):
+    id: int
+
+    class Config:
+        orm_mode = True

@@ -53,3 +53,13 @@ class Balance(Base):
     date = Column(Date, nullable=True)
     cash_balance = Column(Float, nullable=False)
     momo_balance = Column(Float, nullable=False)
+    
+    
+class Transaction(Base):
+    __tablename__ = "transactions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    description = Column(String)
+    amount = Column(Float)
+    type = Column(String)
+    date = Column(Date)

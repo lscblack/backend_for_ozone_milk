@@ -58,6 +58,10 @@ async def create_stock_out(stock: StockCreateSchema, db: db_dependency, user: us
         profit_status = "profit"
     elif (float(stock.product_quantity) * float(stock.price_per_unit)) < (purchase_price * quantity_sold):
         profit_status = "loss"
+        raise HTTPException(
+            status_code=403,
+            detail="You Cant Make Loss On Our Watch"
+        )
     else:
         profit_status = "break-even"
 
